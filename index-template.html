@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="style.css" />
+        <title>Bernstein recipes</title>
+        <script src="search.js"></script>
+    </head>
+    <body>
+
+        <h2>Bernstein recipes</h2>
+        <div style="font-size: 12px">exported at {{db_exported}}</div>        
+        <div style="font-size: 12px">rendered at {{ now }}</div><br>
+        <!-- TODO: navigation -->
+
+        <div>
+            <input class='input mb-5' type="search" id="searchbox" placeholder="omnisearch" tabindex="0" autofocus />
+        </div>
+        <h3>recipes</h3>
+        <ul>
+            {% for recipe in recipes %}
+                <li class="recipe"><a href="html/{{ recipe.title }}.html">{{recipe.title}}</a> ({{recipe.tags}})</li>
+            {% endfor %}
+        </ul>
+
+        <h3>mealie recipes</h3>
+        <ul>
+            {% for recipe in mealie_recipes %}
+                <li class="recipe"><a href="html/mealie-{{ recipe.title }}.html">{{recipe.title}}</a> ({{recipe.tags}})</li>
+            {% endfor %}
+        </ul>
+        
+
+IP quickref: <a href="files/ipduo-quickref.png">png</a> - <a href="files/ipduo-quickref.pdf">pdf</a>
+
+<h4>instant pot brown rice</h4>
+<ol>
+<li>2 cups rice</li>
+<li>2.5 cups water</li>
+<li>close lid & steam release</li>
+<li>press manual, adjust time to 22 minutes</li>
+<li>steam release, sit 15 minutes</li>
+</ol>
+
+<h4><a href="https://www.tastesoflizzyt.com/instant-pot-hard-boiled-eggs/">instant pot hard boiled eggs</a></h4>
+<ol>
+<li>place eggs on trivet over some water</li>
+<li>5 minutes high pressure</li>
+<li>5 minutes natural release</li>
+<li>5 minutes ice water</li>
+</ol>
+
+<h2>recipes</h2>
+<input value=search />
+
+<ul>
+    <li><a class="stew" href="alans-chili.html">alan's chili</a></li>
+    <li><a class="stew" href="thai-curry.html">thai curry</a></li>
+    <li><a class="stew" href="gumbo.html">gumbo</a></li>
+    <li><a class="beverage" href="chai.html">bovik's chai</a></li>
+    <li><a class="instantpot" href="instant-pot-mexican-rice.html">IP mexican rice</a></li>
+    <hr>
+    <li><a class="" href="images/chicken-masala.jpg">chicken masala</a></li>
+    <li><a class="" href="images/indian-curry.jpg">indian curry</a></li>
+    <li><a class="" href="images/knish.png">knishes</a></li>
+    <li><a class="" href="images/buffalo-cauliflower.jpg">buffalo cauliflower</a></li>
+    <li><a class="" href="images/superstar-salad.png">superstar salad</a></li>
+</ul>
+
+<h3>desserts</h3>
+<ul>
+    <li><a class="dessert" href="lemon-curd.html">lemon curd</a></li>
+    <li><a class="dessert" href="linzer-cookies.html">linzer cookies</a></li>
+    <li><a class="dessert" href="mimis-macarons.html">mimi's macarons</a></li>
+    <li><a class="dessert" href="strawberry-brownies.html">strawberry brownies</a></li>
+    <li><a class="dessert" href="transparent-pie.html">transparent pie</a></li>
+</ul>
+
+<h3>secret layer cakes</h3>
+<ul>
+    <li><a class="dessert" href="02-18-chocolate-covered-strawberry-mousse-cake.html">chocolate-covered strawberry mousse cake</a></li>
+</ul>
+
+    <!--
+         <li><a class="" href=""></a></li>
+    -->
+</ul>
+
+
+<h2>links - bookmarks</h2>
+<ol>
+    <li><a href="https://thesaltymarshmallow.com/instant-pot-pulled-pork/">IP Pulled Pork</a></li>
+    <li><a href="https://www.thespruceeats.com/instant-pot-refried-beans-4140600">IP Refried Beans</a></li>
+    <li><a href="https://theweeklymenubook.com/2018/06/30/salt-lick-potato-salad-recipe/">salt lick potato salad</a></li>
+    <li><a href="https://biggreenegg.com/recipes/texas-style-brisket">BGE brisket</a></li>
+    <li><a href="https://amazingribs.com/tested-recipes/beef-and-bison-recipes/smoked-brisket-texas-style">brisket techniques</a></li>
+    <li><a href="https://www.foodnetwork.com/recipes/food-network-kitchen/make-ahead-green-bean-casserole-3364231">green bean casserole</a></li>
+    <li><a href="https://www.southernliving.com/recipes/transparent-pie-whipped-creme-fraiche-sugared-cranberries-recipe">transparent pie</a></li>
+</ol>
+
+<h2>links - to try</h2>
+<ol>
+    <li><a href="https://www.seriouseats.com/the-right-way-to-sauce-pasta">how to sauce pasta</a></li>
+    <li><a href="https://cooking.nytimes.com/recipes/1021682-pure-potato-latkes">latkes</a></li>
+    <li><a href="https://thesouthernladycooks.com/impossible-pie-old-fashioned-recipe/">impossible pie</a></li>
+    <li><a href="https://www.theprairiehomestead.com/2016/02/no-knead-pizza-crust.html">pat's pizza recommendation</a></li>
+</ol>
+
+</body>
+</html>

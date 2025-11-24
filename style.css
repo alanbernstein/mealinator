@@ -1,0 +1,21 @@
+body {
+    background-color: #222;
+    color: #fff;
+    font-family: arial, sans-serif;
+    max-width: 60rem;
+    width: 50%;
+    padding: 2rem;
+    margin: auto;
+}
+
+a {
+    color: #fff;
+}
+
+img {
+    width: 200px;
+}
+
+.hide {
+    display: none;
+}
