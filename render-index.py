@@ -1,70 +1,88 @@
 #!/usr/bin/env python3
 import jinja2
 import datetime
-import glob
+import sqlite3
 import os
 
-from ipdb import iex, set_trace as db
-
 db_file = 'mealie.db'
-TEMPLATE_FILE = "index-template.html"
+TEMPLATE_FILE = "index-template-new.html"
 output_file = "index.html"
 
 time_fmt = '%Y/%m/%d %H:%M:%S'
-now = datetime.datetime.now()
-now_str = datetime.datetime.strftime(now, time_fmt)
-db_exported_epoch = os.stat(db_file).st_mtime
-db_exported_dt = datetime.datetime.fromtimestamp(db_exported_epoch)
-db_exported_str = datetime.datetime.strftime(db_exported_dt, time_fmt)
-
-def read_tags_from_html(fname):
-    with open(fname, 'r') as f:
-        lines = f.read().strip().split('\n')
-
-    tags = []
-    categories = []
-    for l in lines:
-        if l.startswith("<p>tags:"):
-            tags_str = l.replace('<p>tags:', '').replace('</p>', '').strip()
-            if tags_str != '':
-                tags = tags_str.split(', ')
-            #db()
-            #if 'keto' in fname:
-            #    db()
-        if l.startswith("<p>categories:"):
-            cats_str = l.replace('<p>categories:', '').replace('</p>', '').strip()
-            if cats_str != '':
-                categories = cats_str.split(', ')
-    #db()
-    #if 'keto' in fname:
-    #    db()
-    return list(set(tags + categories))
 
 def main():
-    # read recipe files
-    all = glob.glob("html/*.html")
-    nonmealie = []
-    mealie = []
-    for fname in all:
-        slug = fname.replace('html/', '').replace('.html', '')
-        tags = read_tags_from_html(fname)
-        print('%s %s' % (slug, tags))
-        if 'mealie' in fname:
-            slug = slug.replace('mealie-', '')
-            mealie.append({"title": slug, "tags": ", ".join(tags)})
-        else:
-            nonmealie.append({"title": slug, "tags": ", ".join(tags)})
+    now = datetime.datetime.now()
+    now_str = datetime.datetime.strftime(now, time_fmt)
+    db_exported_epoch = os.stat(db_file).st_mtime
+    db_exported_dt = datetime.datetime.fromtimestamp(db_exported_epoch)
+    db_exported_str = datetime.datetime.strftime(db_exported_dt, time_fmt)
 
-    # render template
+    # Connect to database
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    # Get all recipes
+    cursor.execute("SELECT id, name, slug FROM recipes ORDER BY name")
+    recipe_rows = cursor.fetchall()
+
+    recipes = []
+    all_tags_set = set()
+
+    for recipe_id, name, slug in recipe_rows:
+        # Get tags
+        cursor.execute("""
+            SELECT tags.name
+            FROM tags
+            JOIN recipes_to_tags ON tags.id = recipes_to_tags.tag_id
+            WHERE recipes_to_tags.recipe_id=?
+        """, (recipe_id,))
+        tags = [row[0] for row in cursor.fetchall()]
+
+        # Get categories
+        cursor.execute("""
+            SELECT categories.name
+            FROM categories
+            JOIN recipes_to_categories ON categories.id = recipes_to_categories.category_id
+            WHERE recipes_to_categories.recipe_id=?
+        """, (recipe_id,))
+        categories = [row[0] for row in cursor.fetchall()]
+
+        # Combine tags and categories
+        all_recipe_tags = tags + categories
+
+        # Add to global tag set
+        all_tags_set.update(all_recipe_tags)
+
+        # Create recipe object
+        recipes.append({
+            "title": name,
+            "filename": f"mealie-{slug}",
+            "tags": all_recipe_tags,
+            "tags_str": " ".join(all_recipe_tags)
+        })
+
+    conn.close()
+
+    # Sort tags alphabetically
+    all_tags = sorted(list(all_tags_set))
+
+    # Render template
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader)
     template = templateEnv.get_template(TEMPLATE_FILE)
-    rendered = template.render(recipes=nonmealie, mealie_recipes=mealie, db_exported=db_exported_str, now=now_str)
+    rendered = template.render(
+        recipes=recipes,
+        recipe_count=len(recipes),
+        all_tags=all_tags,
+        db_exported=db_exported_str,
+        now=now_str
+    )
 
     with open(output_file, 'w') as f:
         f.write(rendered)
 
-    print('wrote %d bytes to %s' % (len(rendered), output_file))
+    print(f'Wrote {len(rendered)} bytes to {output_file}')
+    print(f'Generated index with {len(recipes)} recipes and {len(all_tags)} tags')
 
-
-main()
+if __name__ == "__main__":
+    main()
