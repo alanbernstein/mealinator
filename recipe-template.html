@@ -34,7 +34,7 @@
 
             {% if slug %}
             <div class="recipe-image-main">
-                <img src="../images/mealie-{{ slug }}.jpg" alt="{{ name }}" onerror="this.parentElement.style.display='none'">
+                <img src="../images/mealie-{{ slug }}.jpg" alt="{{ name }}" onerror="this.onerror=null; this.parentElement.style.display='none'">
             </div>
             {% endif %}
 

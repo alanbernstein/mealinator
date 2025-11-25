@@ -38,7 +38,7 @@
         {% for recipe in recipes %}
         <a href="html/{{ recipe.filename }}.html" class="recipe-card" data-tags="{{ recipe.tags_str }}" data-order="{{ loop.index0 }}" data-title="{{ recipe.title }}">
             <div class="recipe-card-image">
-                <img src="images/thumbnails/{{ recipe.filename }}.jpg" alt="{{ recipe.title }}" loading="lazy" onerror="this.src='images/placeholder.jpg'">
+                <img src="images/thumbnails/{{ recipe.filename }}.jpg" alt="{{ recipe.title }}" loading="lazy" onerror="this.onerror=null; this.src='images/placeholder.jpg'">
             </div>
             <div class="recipe-card-content">
                 <h2 class="recipe-card-title">{{ recipe.title }}</h2>
