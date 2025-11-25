@@ -3,6 +3,7 @@ import jinja2
 import datetime
 import sqlite3
 import os
+from file_utils import write_if_changed
 
 db_file = 'mealie.db'
 TEMPLATE_FILE = "index-template-new.html"
@@ -78,10 +79,14 @@ def main():
         now=now_str
     )
 
-    with open(output_file, 'w') as f:
-        f.write(rendered)
+    # Write index file (only if changed)
+    changed = write_if_changed(output_file, rendered)
 
-    print(f'Wrote {len(rendered)} bytes to {output_file}')
+    if changed:
+        print(f'✓ Updated {output_file}')
+    else:
+        print(f'  Unchanged: {output_file}')
+
     print(f'Generated index with {len(recipes)} recipes and {len(all_tags)} tags')
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-.phony: commit render render-index deploy deploy-quick view clean
+.phony: commit render render-index deploy deploy-quick view view-local clean
 
 commit:
 	git add md/*.md
@@ -8,7 +8,7 @@ commit:
 HTML_DIR := html
 FTP_BASE := ftp://${WEBSITE_FTP_URL}/recipes
 FTP_AUTH := --user ${WEBSITE_FTP_USERNAME}:${WEBSITE_FTP_PASSWORD}
-FTP_FLAGS := --ftp-ssl --ssl-reqd --insecure
+FTP_FLAGS := -s --ftp-ssl --ssl-reqd --insecure
 CURL_UPLOAD := curl ${FTP_FLAGS} ${FTP_AUTH} -T
 
 run:

@@ -2,6 +2,7 @@
 import sqlite3
 import os
 import jinja2
+from file_utils import write_if_changed
 
 # Paths
 DB_PATH = "mealie.db"
@@ -86,15 +87,17 @@ def render_recipes():
             makes=makes if makes else None
         )
 
-        # Save to HTML file
+        # Save to HTML file (only if content changed)
         file_path = os.path.join(HTML_DIR, f"mealie-{slug}.html")
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(rendered)
+        changed = write_if_changed(file_path, rendered)
 
-        print(f"Rendered: {file_path}")
+        if changed:
+            print(f"✓ Updated: {file_path}")
+        else:
+            print(f"  Unchanged: {file_path}")
 
     conn.close()
-    print(f"Rendered {len(recipes)} recipes as HTML files in '{HTML_DIR}'.")
+    print(f"\nRendered {len(recipes)} recipes in '{HTML_DIR}'.")
 
 if __name__ == "__main__":
     render_recipes()

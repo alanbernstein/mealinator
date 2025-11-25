@@ -6,11 +6,14 @@ This script:
 1. Queries the database for all recipes with images
 2. Copies images from the Mealie container to local directories
 3. Creates both original and thumbnail versions for the website
+4. Only copies images if they've changed (preserves timestamps)
 """
 
 import sqlite3
 import subprocess
 import os
+import tempfile
+import filecmp
 
 DB_PATH = "mealie.db"
 CONTAINER_NAME = "mealie"
@@ -26,8 +29,8 @@ def extract_images():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Get all recipes with their IDs and slugs
-    cursor.execute("SELECT id, slug, image FROM recipes WHERE image IS NOT NULL AND image != ''")
+    # Get all recipes - we'll check for images in the container even if DB field is empty
+    cursor.execute("SELECT id, slug, image FROM recipes")
     recipes = cursor.fetchall()
 
     success_count = 0
@@ -48,19 +51,24 @@ def extract_images():
         local_thumbnail = f"{THUMBNAILS_DIR}/mealie-{slug}.webp"
 
         try:
-            # Copy original image (for recipe page)
-            result = subprocess.run(
-                ["docker", "cp", f"{CONTAINER_NAME}:{container_original}", local_original],
+            # Copy to temp files first to check if changed
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.webp') as tmp_original:
+                tmp_original_path = tmp_original.name
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.webp') as tmp_thumbnail:
+                tmp_thumbnail_path = tmp_thumbnail.name
+
+            # Copy original image
+            subprocess.run(
+                ["docker", "cp", f"{CONTAINER_NAME}:{container_original}", tmp_original_path],
                 check=True,
                 capture_output=True,
                 text=True
             )
 
-            # Copy thumbnail (for index page)
-            # Try min-original first, fall back to tiny if not available
+            # Copy thumbnail
             try:
                 subprocess.run(
-                    ["docker", "cp", f"{CONTAINER_NAME}:{container_min}", local_thumbnail],
+                    ["docker", "cp", f"{CONTAINER_NAME}:{container_min}", tmp_thumbnail_path],
                     check=True,
                     capture_output=True,
                     text=True
@@ -68,13 +76,33 @@ def extract_images():
             except subprocess.CalledProcessError:
                 # Fall back to tiny
                 subprocess.run(
-                    ["docker", "cp", f"{CONTAINER_NAME}:{container_tiny}", local_thumbnail],
+                    ["docker", "cp", f"{CONTAINER_NAME}:{container_tiny}", tmp_thumbnail_path],
                     check=True,
                     capture_output=True,
                     text=True
                 )
 
-            print(f"✓ Copied images for: {slug}")
+            # Only replace local files if content changed
+            original_changed = False
+            thumbnail_changed = False
+
+            if not os.path.exists(local_original) or not filecmp.cmp(tmp_original_path, local_original):
+                os.replace(tmp_original_path, local_original)
+                original_changed = True
+            else:
+                os.remove(tmp_original_path)
+
+            if not os.path.exists(local_thumbnail) or not filecmp.cmp(tmp_thumbnail_path, local_thumbnail):
+                os.replace(tmp_thumbnail_path, local_thumbnail)
+                thumbnail_changed = True
+            else:
+                os.remove(tmp_thumbnail_path)
+
+            if original_changed or thumbnail_changed:
+                print(f"✓ Updated images for: {slug}")
+            else:
+                print(f"  Unchanged: {slug}")
+
             success_count += 1
 
         except subprocess.CalledProcessError as e:

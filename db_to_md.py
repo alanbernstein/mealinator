@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from file_utils import write_if_changed
 
 # Path to your Mealie SQLite database
 DB_PATH = "mealie.db"
@@ -93,15 +94,17 @@ categories: {categories}
 {makes}
 """
 
-        # Save to a Markdown file
+        # Save to a Markdown file (only if changed)
         file_path = os.path.join(OUTPUT_DIR, f"mealie-{slug}.md")
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(markdown_content)
+        changed = write_if_changed(file_path, markdown_content)
 
-        print(f"Saved: {file_path}")
+        if changed:
+            print(f"✓ Updated: {file_path}")
+        else:
+            print(f"  Unchanged: {file_path}")
 
     conn.close()
-    print(f"Extracted {len(recipes)} recipes as Markdown files in '{OUTPUT_DIR}'.")
+    print(f"\nExtracted {len(recipes)} recipes as Markdown files in '{OUTPUT_DIR}'.")
 
 if __name__ == "__main__":
     extract_recipes()
