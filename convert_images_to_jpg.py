@@ -4,8 +4,9 @@ Convert WebP images to JPG for better compatibility with older devices.
 
 This script:
 1. Finds all .webp images in the images directory
-2. Converts them to .jpg using ImageMagick
-3. Keeps the webp originals (you can delete them later if desired)
+2. Converts them to .jpg using ImageMagick (only if needed)
+3. Preserves timestamps when jpg is already up-to-date
+4. Keeps the webp originals (you can delete them later if desired)
 """
 
 import subprocess
@@ -17,17 +18,31 @@ THUMBNAILS_DIR = "images/thumbnails"
 
 def convert_webp_to_jpg(webp_path, quality=85):
     """
-    Convert a webp image to jpg using ImageMagick.
+    Convert a webp image to jpg using ImageMagick, only if needed.
+
+    Only converts if:
+    - JPG doesn't exist yet
+    - WebP is newer than existing JPG
 
     Args:
         webp_path: Path to the .webp file
         quality: JPG quality (0-100, default 85)
 
     Returns:
-        Path to the created .jpg file or None if conversion failed
+        tuple: (jpg_path, was_converted) where was_converted is True if conversion happened
     """
     jpg_path = webp_path.replace('.webp', '.jpg')
 
+    # Check if jpg exists and is up-to-date
+    if os.path.exists(jpg_path):
+        webp_mtime = os.path.getmtime(webp_path)
+        jpg_mtime = os.path.getmtime(jpg_path)
+
+        if jpg_mtime >= webp_mtime:
+            # JPG is up-to-date, no need to convert
+            return (jpg_path, False)
+
+    # Need to convert
     try:
         # Use ImageMagick's convert command
         result = subprocess.run(
@@ -36,50 +51,62 @@ def convert_webp_to_jpg(webp_path, quality=85):
             capture_output=True,
             text=True
         )
-        return jpg_path
+        return (jpg_path, True)
     except subprocess.CalledProcessError as e:
         print(f"✗ Failed to convert {webp_path}")
         print(f"  Error: {e.stderr if e.stderr else str(e)}")
-        return None
+        return (None, False)
     except Exception as e:
         print(f"✗ Unexpected error converting {webp_path}")
         print(f"  Error: {str(e)}")
-        return None
+        return (None, False)
 
 def convert_all_images():
-    """Convert all webp images in both directories to jpg."""
+    """Convert all webp images in both directories to jpg (only if needed)."""
 
     # Convert full-size images
     print("Converting full-size images...")
     full_size_webp = glob.glob(f"{IMAGES_DIR}/*.webp")
-    full_success = 0
+    full_converted = 0
+    full_skipped = 0
 
     for webp_path in full_size_webp:
-        jpg_path = convert_webp_to_jpg(webp_path, quality=85)
+        jpg_path, was_converted = convert_webp_to_jpg(webp_path, quality=85)
         if jpg_path:
             filename = os.path.basename(jpg_path)
-            print(f"✓ {filename}")
-            full_success += 1
+            if was_converted:
+                print(f"✓ Converted: {filename}")
+                full_converted += 1
+            else:
+                print(f"  Unchanged: {filename}")
+                full_skipped += 1
 
-    print(f"\nFull-size: {full_success}/{len(full_size_webp)} converted")
+    print(f"\nFull-size: {full_converted} converted, {full_skipped} unchanged")
 
     # Convert thumbnails
     print("\nConverting thumbnails...")
     thumbnail_webp = glob.glob(f"{THUMBNAILS_DIR}/*.webp")
-    thumb_success = 0
+    thumb_converted = 0
+    thumb_skipped = 0
 
     for webp_path in thumbnail_webp:
-        jpg_path = convert_webp_to_jpg(webp_path, quality=80)
+        jpg_path, was_converted = convert_webp_to_jpg(webp_path, quality=80)
         if jpg_path:
             filename = os.path.basename(jpg_path)
-            print(f"✓ {filename}")
-            thumb_success += 1
+            if was_converted:
+                print(f"✓ Converted: {filename}")
+                thumb_converted += 1
+            else:
+                print(f"  Unchanged: {filename}")
+                thumb_skipped += 1
 
-    print(f"\nThumbnails: {thumb_success}/{len(thumbnail_webp)} converted")
+    print(f"\nThumbnails: {thumb_converted} converted, {thumb_skipped} unchanged")
 
     print(f"\n{'='*60}")
     print(f"Conversion complete!")
-    print(f"Total: {full_success + thumb_success}/{len(full_size_webp) + len(thumbnail_webp)} images converted")
+    print(f"Converted: {full_converted + thumb_converted}")
+    print(f"Unchanged: {full_skipped + thumb_skipped}")
+    print(f"Total: {len(full_size_webp) + len(thumbnail_webp)} images")
     print(f"\nNote: WebP originals are kept. You can delete them manually if desired:")
     print(f"  rm images/*.webp")
     print(f"  rm images/thumbnails/*.webp")
