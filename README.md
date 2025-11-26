@@ -45,8 +45,3 @@ The deployment works on changed files only, in theory, so it might be ok to run 
 - comments, makes
 - show domain name of original url
 - link to cooked.wiki/archive.is if its a nyt recipe
-x extract images
-x link to cooked.wiki page
-x deploy over ftp from desktop
-x export changes only
-x deploy changes only
